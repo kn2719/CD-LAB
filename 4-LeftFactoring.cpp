@@ -115,3 +115,14 @@ int main()
 
     return 0;
 }
+
+//Input:
+//2 
+//S=ia|ibC 
+//E=b 
+
+//Output :
+
+//S=iS' 
+//S'=a|bC
+//E=b 
