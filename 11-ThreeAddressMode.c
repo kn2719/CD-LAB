@@ -74,3 +74,5 @@ if(l==1)
 dove(k);
 else
 exit(0);}
+
+//a=b+c-d
