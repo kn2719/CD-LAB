@@ -1,35 +1,83 @@
-gram = {
-	"E":["E*E","E+E","i"]
-}
-starting_terminal = "E"
+#include<stdio.h>
+#include<string.h>
+int k=0,z=0,i=0,j=0,c=0;
+char a[16],ac[20],stk[15],act[10];
+void check();
+int main()
+   {
 
-inp = input("Enter the string \n")
-inp=inp+"$"
+      puts("GRAMMAR is E->E+E \n E->E*E \n E->(E) \n E->id");
+      puts("enter input string ");
+      scanf("%s",a);
+      c=strlen(a);
+      strcpy(act,"SHIFT->");
+      puts("stack \t input \t action");
+      for(k=0,i=0; j<c; k++,i++,j++)
+       {
+         if(a[j]=='i' && a[j+1]=='d')
+           {
+              stk[i]=a[j];
+              stk[i+1]=a[j+1];
+              stk[i+2]='\0';
+              a[j]=' ';
+              a[j+1]=' ';
+              printf("\n$%s\t%s$\t%sid",stk,a,act);
+              check();
+           }
+         else
+           {
+              stk[i]=a[j];
+              stk[i+1]='\0';
+              a[j]=' ';
+              printf("\n$%s\t%s$\t%ssymbols",stk,a,act);
+              check();
+           }
+       }
 
-stack = "$"
-print(f'{"Stack": <15}'+"|"+f'{"Input Buffer": <15}'+"|"+f'Parsing Action')
-print(f'{"-":-<50}')
+   }
+void check()
+   {
+     strcpy(ac,"REDUCE TO E");
+     for(z=0; z<c; z++)
+       if(stk[z]=='i' && stk[z+1]=='d')
+         {
+           stk[z]='E';
+           stk[z+1]='\0';
+           printf("\n$%s\t%s$\t%s",stk,a,ac);
+           j++;
+         }
+     for(z=0; z<c; z++)
+       if(stk[z]=='E' && stk[z+1]=='+' && stk[z+2]=='E')
+         {
+           stk[z]='E';
+           stk[z+1]='\0';
+           stk[z+2]='\0';
+           printf("\n$%s\t%s$\t%s",stk,a,ac);
+           i=i-2;
+         }
+     for(z=0; z<c; z++)
+       if(stk[z]=='E' && stk[z+1]=='*' && stk[z+2]=='E')
+         {
+           stk[z]='E';
+           stk[z+1]='\0';
+           stk[z+1]='\0';
+           printf("\n$%s\t%s$\t%s",stk,a,ac);
+           i=i-2;
+         }
+     for(z=0; z<c; z++)
+       if(stk[z]=='(' && stk[z+1]=='E' && stk[z+2]==')')
+         {
+           stk[z]='E';
+           stk[z+1]='\0';
+           stk[z+1]='\0';
+           printf("\n$%s\t%s$\t%s",stk,a,ac);
+           i=i-2;
+         }
+   }
 
-while True:
-	action = True
-	i = 0
-	while i<len(gram[starting_terminal]):
-		if gram[starting_terminal][i] in stack:
-			stack = stack.replace(gram[starting_terminal][i],starting_terminal)
-			print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Reduce S->{gram[starting_terminal][i]}')
-			i=-1
-			action = False
-		i+=1
-	if len(inp)>1:
-		stack+=inp[0]
-		inp=inp[1:]
-		print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Shift')
-		action = False
-
-	if inp == "$" and stack == ("$"+starting_terminal):
-		print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Accepted')
-		break
-
-	if action:
-		print(f'{stack: <15}'+"|"+f'{inp: <15}'+"|"+f'Rejected')
-		break
+//GRAMMAR is E->E+E 
+ //E->E*E 
+ //E->(E) 
+ //E->id
+//enter input string 
+//id+id*id
