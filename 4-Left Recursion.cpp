@@ -1,107 +1,175 @@
-#include <iostream>
-#include <vector>
-#include <string>
+#include <bits/stdc++.h>
 using namespace std;
 
-int main()
-{
-    int n;
-    cout << "\nEnter number of non terminals: ";
-    cin >> n;
-    cout << "\nEnter non terminals one by one: ";
-    int i;
-    vector<string> nonter(n);
-    vector<int> leftrecr(n, 0);
-    for (i = 0; i < n; ++i)
-    {
-        cout << "\nNon terminal " << i + 1 << " : ";
-        cin >> nonter[i];
-    }
-    vector<vector<string> > prod;
-    cout << "\nEnter 'esp' for null";
-    for (i = 0; i < n; ++i)
-    {
-        cout << "\nNumber of " << nonter[i] << " productions: ";
-        int k;
-        cin >> k;
-        int j;
-        cout << "\nOne by one enter all " << nonter[i] << " productions";
-        vector<string> temp(k);
-        for (j = 0; j < k; ++j)
-        {
-            cout << "\nRHS of production " << j + 1 << ": ";
-            string abc;
-            cin >> abc;
-            temp[j] = abc;
-            if (nonter[i].length() <= abc.length() && nonter[i].compare(abc.substr(0, nonter[i].length())) == 0)
-                leftrecr[i] = 1;
-        }
-        prod.push_back(temp);
-    }
-    for (i = 0; i < n; ++i)
-    {
-        cout << leftrecr[i];
-    }
-    for (i = 0; i < n; ++i)
-    {
-        if (leftrecr[i] == 0)
-            continue;
-        int j;
-        nonter.push_back(nonter[i] + "'");
-        vector<string> temp;
-        for (j = 0; j < prod[i].size(); ++j)
-        {
-            if (nonter[i].length() <= prod[i][j].length() && nonter[i].compare(prod[i][j].substr(0, nonter[i].length())) == 0)
-            {
-                string abc = prod[i][j].substr(nonter[i].length(), prod[i][j].length() - nonter[i].length()) + nonter[i] + "'";
-                temp.push_back(abc);
-                prod[i].erase(prod[i].begin() + j);
-                --j;
-            }
-            else
-            {
-                prod[i][j] += nonter[i] + "'";
-            }
-        }
-        temp.push_back("esp");
-        prod.push_back(temp);
-    }
-    cout << "\n\n";
-    cout << "\nNew set of non-terminals: ";
-    for (i = 0; i < nonter.size(); ++i)
-        cout << nonter[i] << " ";
-    cout << "\n\nNew set of productions: ";
-    for (i = 0; i < nonter.size(); ++i)
-    {
-        int j;
-        for (j = 0; j < prod[i].size(); ++j)
-        {
-            cout << "\n"
-                 << nonter[i] << " -> " << prod[i][j];
-        }
-    }
-    return 0;
+class NonTerminal {
+	string name;				 // Stores the Head of production rule
+	vector<string> productionRules; // Stores the body of production rules
+
+public:
+	NonTerminal(string name) {
+		this->name = name;
+	}
+
+	// Returns the head of the production rule
+	string getName() {
+		return name;
+	}
+
+	// Returns the body of the production rules
+	void setRules(vector<string> rules) {
+		productionRules.clear();
+		for (auto rule : rules){
+			productionRules.push_back(rule);
+		}
+	}
+
+	vector<string> getRules() {
+		return productionRules;
+	}
+
+	void addRule(string rule) {
+		productionRules.push_back(rule);
+	}
+
+	// Prints the production rules
+	void printRule() {
+		string toPrint = "";
+		toPrint += name + " ->";
+
+		for (string s : productionRules){
+			toPrint += " " + s + " |";
+		}
+
+		toPrint.pop_back();
+		cout << toPrint << endl;
+	}
+};
+
+class Grammar {
+	vector<NonTerminal> nonTerminals;
+
+public:
+	// Add rules to the grammar
+	void addRule(string rule) {
+		bool nt = 0;
+		string parse = "";
+
+		for (char c : rule){
+			if (c == ' ') {
+				if (!nt) {
+					NonTerminal newNonTerminal(parse);
+					nonTerminals.push_back(newNonTerminal);
+					nt = 1;
+					parse = "";
+				} else if (parse.size()){
+					nonTerminals.back().addRule(parse);
+					parse = "";
+				}
+			}else if (c != '|' && c != '-' && c != '>'){
+				parse += c;
+			}
+		}
+		if (parse.size()){
+			nonTerminals.back().addRule(parse);
+		}
+	}
+
+	void inputData() {
+
+		
+		addRule("S -> Sa | Sb | c | d");
+
+	}
+
+	// Algorithm for eliminating the non-Immediate Left Recursion
+	void solveNonImmediateLR(NonTerminal &A, NonTerminal &B) {
+		string nameA = A.getName();
+		string nameB = B.getName();
+
+		vector<string> rulesA, rulesB, newRulesA;
+		rulesA = A.getRules();
+		rulesB = B.getRules();
+
+		for (auto rule : rulesA) {
+			if (rule.substr(0, nameB.size()) == nameB) {
+				for (auto rule1 : rulesB){
+					newRulesA.push_back(rule1 + rule.substr(nameB.size()));
+				}
+			}
+			else{
+				newRulesA.push_back(rule);
+			}
+		}
+		A.setRules(newRulesA);
+	}
+
+	// Algorithm for eliminating Immediate Left Recursion
+	void solveImmediateLR(NonTerminal &A) {
+		string name = A.getName();
+		string newName = name + "'";
+
+		vector<string> alphas, betas, rules, newRulesA, newRulesA1;
+		rules = A.getRules();
+
+		// Checks if there is left recursion or not
+		for (auto rule : rules) {
+			if (rule.substr(0, name.size()) == name){
+				alphas.push_back(rule.substr(name.size()));
+			}
+			else{
+				betas.push_back(rule);
+			}
+		}
+
+		// If no left recursion, exit
+		if (!alphas.size())
+			return;
+
+		if (!betas.size())
+			newRulesA.push_back(newName);
+
+		for (auto beta : betas)
+			newRulesA.push_back(beta + newName);
+
+		for (auto alpha : alphas)
+			newRulesA1.push_back(alpha + newName);
+
+		// Amends the original rule
+		A.setRules(newRulesA);
+		newRulesA1.push_back("\u03B5");
+
+		// Adds new production rule
+		NonTerminal newNonTerminal(newName);
+		newNonTerminal.setRules(newRulesA1);
+		nonTerminals.push_back(newNonTerminal);
+	}
+
+	// Eliminates left recursion
+	void applyAlgorithm() {
+		int size = nonTerminals.size();
+		for (int i = 0; i < size; i++){
+			for (int j = 0; j < i; j++){
+				solveNonImmediateLR(nonTerminals[i], nonTerminals[j]);
+			}
+			solveImmediateLR(nonTerminals[i]);
+		}
+	}
+
+	// Print all the rules of grammar
+	void printRules() {
+		for (auto nonTerminal : nonTerminals){
+			nonTerminal.printRule();
+		}
+	}
+};
+
+int main(){
+	//freopen("output.txt", "w+", stdout);
+
+	Grammar grammar;
+	grammar.inputData();
+	grammar.applyAlgorithm();
+	grammar.printRules();
+
+	return 0;
 }
-
-// Sample Input
-
-// Enter number of non terminals: 3
-
-// Enter non terminals one by one:
-// Non terminal 1: A
-// Non terminal 2: B
-// Non terminal 3: C
-
-// Enter 'esp' for null
-// Number of A productions: 2
-// One by one enter all A productions
-// RHS of production 1: BCD
-// RHS of production 2: BC
-
-// Number of B productions: 1
-// One by one enter all B productions
-// RHS of production 1: AC
-
-// Number of C productions: 1
-// One by one enter all C productions
-// RHS of production 1: a
